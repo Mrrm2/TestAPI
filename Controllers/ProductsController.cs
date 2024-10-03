@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TestAPI.Data;
+using TestAPI.IdempotencyLibrary.Attributes;
 using TestAPI.Models;
 
 namespace TestAPI.Controllers
@@ -40,6 +41,7 @@ namespace TestAPI.Controllers
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Idempotency] // To enable idempotency for this endpoint
         public async Task<IActionResult> PutProduct(int id, Product product)
         {
             if (id != product.ProductId)
@@ -71,6 +73,7 @@ namespace TestAPI.Controllers
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Idempotency] // To enable idempotency for this endpoint
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
             _context.Products.Add(product);
