@@ -22,17 +22,22 @@ cd TestAPI
 ```
 
 ## Setting up the Project
-Open the solution in your preferred IDE (e.g., Visual Studio or Visual Studio Code).
 
 Restore the necessary dependencies:
-```dotnet restore```
+```
+dotnet restore
+```
 
 Build the solution:
-```dotnet build```
+```
+dotnet build
+```
 
 ### Running the API
 Run the application:
-```dotnet watch```
+```
+dotnet watch
+```
 .NET will give you a link of where the API is being hosted once it builds the project.
 
 ### API Endpoints
@@ -106,7 +111,11 @@ The core logic of idempotency is implemented in the `IdempotencyAttribute` class
 
 ### Cache Duration
 The cache duration is currently set to 5 minutes (300 seconds) in the `IdempotencyAttribute` class:
-```Cache.Set(idempotencyKey, okResult.Value, TimeSpan.FromMinutes(5));```
+```
+c#
+
+Cache.Set(idempotencyKey, okResult.Value, TimeSpan.FromMinutes(5));
+```
 
 ### Why 5 Minutes?
 - Reasoning: A 5-minute cache duration is a common choice for idempotency in scenarios where network instability or client retries may occur within a short timeframe. This duration ensures that if a client accidentally resends the same request due to a timeout or error, the server can handle it gracefully without creating duplicate resources.
@@ -116,7 +125,11 @@ The cache duration is currently set to 5 minutes (300 seconds) in the `Idempoten
 Modifying the Cache Duration
 To change the cache duration, update the `TimeSpan` value in the `IdempotencyAttribute` class:
 
-```Cache.Set(idempotencyKey, okResult.Value, TimeSpan.FromMinutes(10)); // Change 10 to the desired number of minutes```
+```
+c#
+
+Cache.Set(idempotencyKey, okResult.Value, TimeSpan.FromMinutes(10)); // Change 10 to the desired number of minutes
+```
 
 ## Testing the API
 ### Testing with Postman
