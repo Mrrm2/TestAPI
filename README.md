@@ -159,7 +159,7 @@ json
     - A new order should be created, and a different orderId should be returned.
     
 4. Get Orders:
-    - Send a GET request to 1https://localhost:PORT/api/orders` to see all placed orders.
+    - Send a GET request to `https://localhost:PORT/api/orders` to see all placed orders.
 
 ### Further Enhancements
 - Use a persistent cache like Redis store idempotency keys across multiple instances of the application (for next stage).
