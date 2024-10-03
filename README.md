@@ -9,9 +9,9 @@ This repository demonstrates an implementation of idempotency in a simple ASP.NE
 
 ## Getting Started
 ### Prerequisites
-.NET 8 SDK
-IDE such as Visual Studio or Visual Studio Code
-Postman or any other API testing tool for sending requests to the API
+- .NET 8 SDK
+- IDE such as Visual Studio or Visual Studio Code
+- Postman or any other API testing tool for sending requests to the API
 
 ## Cloning the Repository
 Clone the repository to your local machine:
