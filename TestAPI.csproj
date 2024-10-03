@@ -24,8 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers/" />
-    <Folder Include="IdempotencyLibrary\" />
-    <Folder Include="IdempotencyLibrary\Attributes\" />
     <Folder Include="IdempotencyLibrary\Filters\" />
     <Folder Include="IdempotencyLibrary\Implementations\" />
     <Folder Include="IdempotencyLibrary\Interfaces\" />
