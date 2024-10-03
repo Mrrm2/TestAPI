@@ -19,6 +19,7 @@ Clone the repository to your local machine:
 ```
 git clone https://github.com/Mrrm2/TestAPI.git
 cd TestAPI
+cd TestAPI
 ```
 
 ## Setting up the Project
