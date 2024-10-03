@@ -38,7 +38,7 @@ Run the application:
 ```
 dotnet watch
 ```
-.NET will give you a link of where the API is being hosted once it builds the project.
+.NET will give you a link (including the port) of where the API is being hosted once it builds the project.
 
 ### API Endpoints
 1. Create Order
