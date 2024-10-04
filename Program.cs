@@ -17,10 +17,11 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<SampleDbContext>(options =>
     options.UseSqlite(connectionString));
 
-// Register Controllers with Idempotency Filter
+// Register Controllers with Filters
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<IdempotencyFilter>(); // Register the Idempotency Filter globally for all controllers
+    options.Filters.Add<IdempotencyFilter>(); // Inbound filter for validation
+    options.Filters.Add<ResponseCaptureFilter>(); // Outbound filter for response capture
 });
 
 // Register Idempotency Store

@@ -42,6 +42,7 @@ namespace TestAPI.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         [Idempotency] // To enable idempotency for this endpoint
+        [ResponseCapture(StatusCodesToCapture = new[] { 200, 201 }, CacheExpiryInHours = 48, IncludeHeaders = true)]
         public async Task<IActionResult> PutOrder(int id, Order order)
         {
             if (id != order.Id)
@@ -74,6 +75,7 @@ namespace TestAPI.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         [Idempotency] // To enable idempotency for this endpoint
+        [ResponseCapture(StatusCodesToCapture = new[] { 200, 201 }, CacheExpiryInHours = 48, IncludeHeaders = true)]
         public async Task<ActionResult<Order>> PostOrder(Order order)
         {
             _context.Orders.Add(order);
