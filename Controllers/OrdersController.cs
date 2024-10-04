@@ -1,5 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TestAPI.Attributes;
 using TestAPI.Data;
 using TestAPI.Models;
 
@@ -7,6 +13,8 @@ namespace TestAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [CheckValid("TLKAcc")]
+    [InterceptOutbound]
     public class OrdersController : ControllerBase
     {
         private readonly SampleDbContext _context;
@@ -27,7 +35,7 @@ namespace TestAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            var order = await _context.Orders.FindAsync(id);
 
             if (order == null)
             {

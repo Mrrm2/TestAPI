@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using TestAPI.Models;
 
 namespace TestAPI.Data;
@@ -158,7 +157,7 @@ public static class SampleData
                 Quantity = 4,
                 Status = "Shipped",
                 OrderDate = new DateTime(2024, 9, 30)
-               
+
             },
             new Order()
             {

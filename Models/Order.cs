@@ -6,15 +6,15 @@ namespace TestAPI.Models;
 
 public class Order
 {
-    public int Id { get; set; } 
-    
-    [ForeignKey("ProductId")]
-    public required int ProductId { get; set; }  
+    public int Id { get; set; }
 
-    public int Quantity { get; set; }  
+    [ForeignKey("ProductId")]
+    public int ProductId { get; set; }
+
+    public int Quantity { get; set; }
 
     [MaxLength(20)]
-    public required string Status { get; set; }  
-    
-    public DateTime OrderDate { get; set; }  
+    public required string Status { get; set; }
+
+    public DateTime OrderDate { get; set; }
 }
