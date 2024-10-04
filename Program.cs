@@ -7,6 +7,8 @@ using TestAPI.Data;
 using TestAPI.IdempotencyLibrary.Filters;
 using TestAPI.IdempotencyLibrary.Implementations;
 using TestAPI.IdempotencyLibrary.Interfaces;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +32,7 @@ builder.Services.AddAuthentication("Bearer")
     {
         if (builder.Environment.IsDevelopment())
         {
-            options.RequireHttpsMetadata = false;
+            options.RequireHttpsMetadata = false; // Skips HTTPS validation during local testing
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
@@ -42,11 +44,7 @@ builder.Services.AddAuthentication("Bearer")
         }
         else
         {
-            // options.Authority = "https://TransLink-auth-server.com"; // Replace with actual authority URL when available
-
-            // ********************************************************************************************************************
-            options.Authority = "https://Azure-mock-auth-testing.com"; // Replace with mock authority URL for testing when setup
-            // ********************************************************************************************************************
+            options.Authority = "https://TransLink-auth-server.com"; // Replace with actual authority URL when available
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
@@ -61,9 +59,15 @@ builder.Services.AddAuthorization();
 // Register Logging Services
 builder.Services.AddLogging(configure => configure.AddConsole().AddDebug());
 
-// Add Swagger for API testing during development
+// Add Swagger for API testing during development, including the Idempotency-Key header
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TestAPI", Version = "v1" });
+    
+    // Add custom header parameter for Idempotency-Key to Swagger
+    c.OperationFilter<AddRequiredHeaderParameter>();
+});
 
 var app = builder.Build();
 
@@ -96,3 +100,25 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Custom operation filter to add Idempotency-Key header to Swagger UI
+public class AddRequiredHeaderParameter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        if (operation.Parameters == null)
+            operation.Parameters = new List<OpenApiParameter>();
+
+        operation.Parameters.Add(new OpenApiParameter
+        {
+            Name = "Idempotency-Key",
+            In = ParameterLocation.Header,
+            Required = false,
+            Schema = new OpenApiSchema
+            {
+                Type = "string"
+            },
+            Description = "Idempotency Key for ensuring request idempotency"
+        });
+    }
+}

@@ -52,8 +52,8 @@ public class IdempotencyFilter : IAsyncActionFilter
                 return;
             }
 
-            // string clientId = user.FindFirst("client_id")?.Value; // Uncomment line and remove line below for production use
-            string clientId = "test-client-id"; // Hardcoded client ID for local testing purposes
+            // Uses the hardcoded client ID for local testing or extract it from token for production
+            string clientId = user.FindFirst("client_id")?.Value ?? "test-client-id";
             if (string.IsNullOrEmpty(clientId))
             {
                 context.Result = new UnauthorizedObjectResult("Client ID not found in access token.");
@@ -70,39 +70,19 @@ public class IdempotencyFilter : IAsyncActionFilter
             }
 
             // Proceed with the action execution
-            var retryCount = idempotencyAttribute.RetryCount;
+                var executedContext = await next();
 
-            while (retryCount > 0)
-            {
-                try
+                // After the action executes, store the response if the request was successful
+                if (executedContext.Result is ObjectResult objectResult && (objectResult.StatusCode == 200 || objectResult.StatusCode == 201))
                 {
-                    var executedContext = await next();
-
-                    // After the action executes, store the response
-                    if (executedContext.Result is ObjectResult objectResult && objectResult.StatusCode == 200)
-                    {
-                        await _idempotencyStore.SaveResponseAsync(clientId, idempotencyKey, objectResult.Value, TimeSpan.FromHours(idempotencyAttribute.CacheExpiryInHours));
-                    }
-
-                    return; // Successfully processed request, no need to retry further
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "An error occurred during action execution. Retries left: {RetryCount}", retryCount);
-                    retryCount--;
-
-                    if (retryCount <= 0)
-                    {
-                        throw; // No retries left, rethrow the exception
-                    }
+                    await _idempotencyStore.SaveResponseAsync(clientId, idempotencyKey, objectResult.Value!, TimeSpan.FromHours(idempotencyAttribute.CacheExpiryInHours));
                 }
             }
-        }
-        else
-        {
-            // Proceed with the action execution if no IdempotencyAttribute is applied
-            await next();
-        }
+            else
+            {
+                // Proceed with the action execution if no IdempotencyAttribute is applied
+                await next();
+            }
     }
 }
 
