@@ -8,7 +8,8 @@ dotnet ef migrations add InitializeDb -o Data/Migrations
 dotnet ef database update
 ```
 
-1. Once Creating a project with controllers and the necessary data, use the attributes [CheckValid<role>] and [InterceptOutbound] as the class's or methods attribute.
+1. Once Creating a project with controllers and the necessary data, use the attributes 
+```[CheckValid<role>]``` and ```[InterceptOutbound]``` as the class's or methods attribute.
 
 2. Then set up a dotnet Test Frame work
 
