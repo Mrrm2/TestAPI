@@ -11,7 +11,7 @@ namespace TestAPI.Attributes;
 /// Custom Attribute that checks if the user is valid and access key is also valid
 /// ADD THIS TO CONTROLLERS [CheckValid(<role>)]
 /// </summary>
-public class CheckValid : AuthorizeAttribute, IAuthorizationFilter
+public class CheckValid : Attribute, IAuthorizationFilter
 {
     // Role to check
     private readonly string _role;
@@ -38,13 +38,20 @@ public class CheckValid : AuthorizeAttribute, IAuthorizationFilter
         bool containsAuthToken = context.HttpContext.Request.Headers.TryGetValue("Authorization", out var accessToken);
 
         // set up claim value for expiration date
-        var token = accessToken.ToString().Split(" ").Last();
-        var handler = new JwtSecurityTokenHandler();
-        var jsonToken = handler.ReadJwtToken(token);
+        JwtSecurityToken jsonToken;
+        try {
+            var token = accessToken.ToString().Split(" ").Last();
+            var handler = new JwtSecurityTokenHandler();
+            jsonToken = handler.ReadJwtToken(token);
+        } catch (ArgumentNullException) {
+            context.Result = new UnauthorizedResult();
+            return;
+        }
         
         var exp = jsonToken.Claims.FirstOrDefault(claim => claim.Type == "exp")!.Value;
         var expDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).DateTime;
 
+        // Checks if token is expired
         bool isExpired = DateTime.UtcNow.CompareTo(expDate) >= 0;
 
         if (!isUserAuthenticated || !isRole || !containsAuthToken || isExpired)

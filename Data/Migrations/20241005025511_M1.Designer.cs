@@ -11,8 +11,8 @@ using TestAPI.Data;
 namespace TestAPI.Data.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    [Migration("20241004032343_InitializeDb")]
-    partial class InitializeDb
+    [Migration("20241005025511_M1")]
+    partial class M1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

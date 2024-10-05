@@ -29,7 +29,15 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
   options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
-builder.Services.AddAuthorization();
+// Add Cors
+builder.Services.AddCors(o => o.AddPolicy("IdempontencyPolicy", builder => {
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader();
+}));
+
+
+// builder.Services.AddAuthorization();
 
 // Add Identity requirements
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(
@@ -62,6 +70,7 @@ builder.Services.AddAuthentication(option => {
   };
 });
 
+
 // custom header for test purposes
 builder.Services.AddSwaggerGen(c =>
 {
@@ -82,6 +91,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// app.UseRouting
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

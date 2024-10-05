@@ -14,7 +14,6 @@ namespace TestAPI.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [CheckValid("TLKAcc")]
-    [InterceptOutbound]
     public class OrdersController : ControllerBase
     {
         private readonly SampleDbContext _context;
@@ -48,6 +47,7 @@ namespace TestAPI.Controllers
         // PUT: api/Orders/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [InterceptOutbound(5)]
         public async Task<IActionResult> PutOrder(int id, Order order)
         {
             if (id != order.Id)
@@ -79,6 +79,7 @@ namespace TestAPI.Controllers
         // POST: api/Orders
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [InterceptOutbound(5)]
         public async Task<ActionResult<Order>> PostOrder(Order order)
         {
             _context.Orders.Add(order);
@@ -89,6 +90,7 @@ namespace TestAPI.Controllers
 
         // DELETE: api/Orders/5
         [HttpDelete("{id}")]
+        [InterceptOutbound(5)]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
