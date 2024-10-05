@@ -43,7 +43,6 @@ public class InterceptOutbound(int expiryTime) : ActionFilterAttribute
 
         string true_idempotencyKey = $"{client_id}-{idempotencyKey}";
         // Get the client cache procssed keys
-        Console.WriteLine(true_idempotencyKey);
         if (_cache!.TryGetValue(true_idempotencyKey, out _))
         {
             // if the key is in the cache
