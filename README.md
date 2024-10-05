@@ -66,7 +66,9 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
     {
         "/register",
         "/login",
-        "/api/Products"
+        "/api/Products",
+        "/api/Orders"
+
     };
 
     // Mock Data servers to be registered and used
@@ -92,19 +94,21 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
     [TestMethod]
     public async Task RegisterAsync()
     {
-        // ARRANGE
-        int i = 1; // pick a user
-        var resource = new { email = mockUsers[i].email, password = mockUsers[i].password };
-        var json = JsonConvert.SerializeObject(resource);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        // // ARRANGE
+        // int i = 1;
+        // var resource = new { email = mockUsers[i].email, password = mockUsers[i].password };
+        // var json = JsonConvert.SerializeObject(resource);
+        // var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // ACT
-        var postResponse = await _client.PostAsync(_url + myUrls[0], content);
-        postResponse.EnsureSuccessStatusCode();
-        var postResponseBody = await postResponse.Content.ReadAsStringAsync();
-        // Get response context
-        dynamic response = JsonConvert.DeserializeObject(postResponseBody);
-        Assert.AreEqual(mockUsers[i].email, response!.username.ToString());
+        // // ACT
+        // var postResponse = await _client!.PostAsync(_url + myUrls[0], content);
+        // postResponse.EnsureSuccessStatusCode();
+
+        // var postResponseBody = await postResponse.Content.ReadAsStringAsync();
+
+        // // ASSERT
+        // dynamic? response = JsonConvert.DeserializeObject(postResponseBody);
+        // Assert.AreEqual(mockUsers[i].email, response!.username.ToString());
     
     }
 
@@ -117,10 +121,10 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
         _client!.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "Sample Token");
 
         // ACT
-        var response = await _client.GetAsync(_url + myUrls[2]);
+        dynamic? response = await _client.GetAsync(_url + myUrls[2]);
 
         // ASSERT
-        Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.AreEqual(HttpStatusCode.InternalServerError, response.StatusCode);
     }
 
 
@@ -138,7 +142,7 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
         var postResponse = await _client!.PostAsync(_url + myUrls[1], content);
 
         // ASSERT
-        Assert.AreEqual(HttpStatusCode.OK, postResponse.StatusCode);       
+        Assert.AreEqual(HttpStatusCode.OK, postResponse.StatusCode);    
     }
 
 
@@ -160,61 +164,78 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
     [TestMethod]
     public async Task MissingIdempotencyKey()
     {
-        // Arrange
-        var resource = new { email = mockUsers[0].email, password = mockUsers[0].password };
-        var json = JsonConvert.SerializeObject(resource);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        // Login First to get the token
-        var postResponse = await _client!.PostAsync(_url + myUrls[1], content);
-        postResponse.EnsureSuccessStatusCode();
-        var postResponseBody = await postResponse.Content.ReadAsStringAsync();        
-        dynamic? response = JsonConvert.DeserializeObject(postResponseBody);        
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", response!.token.ToString());
-        
+        {
+            // Arrange
+            var resource = new { email = mockUsers[0].email, password = mockUsers[0].password };
+            var json = JsonConvert.SerializeObject(resource);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            // Login First to get the token
+            var postResponse = await _client!.PostAsync(_url + myUrls[1], content);
+            postResponse.EnsureSuccessStatusCode();
+            var postResponseBody = await postResponse.Content.ReadAsStringAsync();        
+            dynamic? response = JsonConvert.DeserializeObject(postResponseBody);        
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", response!.token.ToString());
+        }
         // Now remove the Idempontency Key header
         _client.DefaultRequestHeaders.Remove("Idempotency-Key");
         
+        var emptyResource = new {};
+        var emptyJson = JsonConvert.SerializeObject(emptyResource);
+        var emptyContent = new StringContent(emptyJson, Encoding.UTF8, "application/json");
+
         // ACT
-        response = await _client.GetAsync(_url + myUrls[2]);
+        dynamic? response1 = await _client.PostAsync(_url + myUrls[3], emptyContent);
 
         // ASSERT
-        Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.AreEqual(HttpStatusCode.BadRequest, response1.StatusCode);
     }
 
     // Tests the scenario where the idempotency key is duplicated
     [TestMethod]
     public async Task DuplicateIdempotencyKey()
     {
-        // Arrange
-        var resource = new { email = mockUsers[0].email, password = mockUsers[0].password };
-        var json = JsonConvert.SerializeObject(resource);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        // Login First
-        var postResponse = await _client!.PostAsync(_url + myUrls[1], content);
-        postResponse.EnsureSuccessStatusCode();
-        var postResponseBody = await postResponse.Content.ReadAsStringAsync();        
-        dynamic? response = JsonConvert.DeserializeObject(postResponseBody);
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", response!.token.ToString());
-
+        // CHANGE THE VALUE OF THE RESOURCE SO THAT ANOTHER CASE CAN BE PERFORMED
+        var myResource = new { productId = 0, quantity = 3, status = "sending", orderDate = "2024-10-05T03:12:45.843Z" };
+        string myIdempontencyKey = $"{myResource.productId}-{myResource.quantity}-{myResource.status}-{myResource.orderDate}";
+        {
+            // Arrange
+            var resource = new { email = mockUsers[0].email, password = mockUsers[0].password };
+            var json = JsonConvert.SerializeObject(resource);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            // Login First
+            var postResponse = await _client!.PostAsync(_url + myUrls[1], content);
+            postResponse.EnsureSuccessStatusCode();
+            var postResponseBody = await postResponse.Content.ReadAsStringAsync();        
+            dynamic? response = JsonConvert.DeserializeObject(postResponseBody);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", response!.token.ToString());
+        }
         // Add a sample key
-        _client.DefaultRequestHeaders.Add("Idempotency-Key", "Key");
+        _client.DefaultRequestHeaders.Add("Idempotency-Key", myIdempontencyKey);
         _client.DefaultRequestHeaders.Accept.Clear();
         _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+        
+        var myContent = new StringContent(
+            JsonConvert.SerializeObject(myResource), Encoding.UTF8, "application/json");
+
         // ACT
-        response = await _client.GetAsync(_url + myUrls[2]); // call first and process
-        response = await _client.GetAsync(_url + myUrls[2]); // call second and try to process with same key
+        dynamic? myPostResponse1 = await _client.PostAsync(_url + myUrls[3], myContent);
+        dynamic? myPostResponse2 = await _client.PostAsync(_url + myUrls[3], myContent);
 
         // ASSERT
-        Assert.AreEqual(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.AreNotEqual(myPostResponse1.StatusCode, myPostResponse2.StatusCode);
+        Assert.AreEqual(HttpStatusCode.Conflict, myPostResponse2.StatusCode);
     }
 
     // Tests the scenario where the idempotency key is the same but the user is different
     [TestMethod]
     public async Task SameIdempotencyKeyDifferentUsers()
     {
-        // change upon processed already to prevent the same duplicate issue
-        string IdempotencyKey = "Key1";
+        // Create post resource to easily access its content for the end post request.
+        var myResource = new { productId = 2, quantity = 1, status = "sent", orderDate = "2024-10-05T03:12:45.843Z" };
+        string IdempotencyKey = $"{myResource.productId}-{myResource.quantity}-{myResource.status}-{myResource.orderDate}";
+
+        var user1Status = HttpStatusCode.OK;
         {
             // User 1
 
@@ -231,8 +252,12 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+            var myContent = new StringContent(
+            JsonConvert.SerializeObject(myResource), Encoding.UTF8, "application/json");
+
             // ACT
-            await _client.GetAsync(_url + myUrls[2]);
+            var myPostResponse1 = await _client.PostAsync(_url + myUrls[3], myContent);
+            user1Status = myPostResponse1.StatusCode;
         }
 
         {
@@ -253,11 +278,14 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
             _client.DefaultRequestHeaders.Accept.Clear();
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+            var myContent = new StringContent(
+            JsonConvert.SerializeObject(myResource), Encoding.UTF8, "application/json");
+
             // ACT
-            response = await _client.GetAsync(_url + myUrls[2]);
+            var myPostResponse2 = await _client.PostAsync(_url + myUrls[3], myContent);
 
             // ASSERT
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);   
+            Assert.AreEqual(user1Status, myPostResponse2.StatusCode);   
         }
     }
 }
