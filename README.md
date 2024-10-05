@@ -8,7 +8,8 @@ dotnet ef migrations add InitializeDb -o Data/Migrations
 dotnet ef database update
 ```
 
-1. Once Creating a project with controllers and the necessary data, use the attributes [CheckValid<role>] and [InterceptOutbound] as the class's or methods attribute.
+1. Once Creating a project with controllers and the necessary data, use the attributes 
+```[CheckValid<role>]``` and ```[InterceptOutbound]``` as the class's or methods attribute.
 
 2. Then set up a dotnet Test Frame work
 
@@ -91,20 +92,18 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
     [TestMethod]
     public async Task RegisterAsync()
     {
-        int i = 1;
+        // ARRANGE
+        int i = 1; // pick a user
         var resource = new { email = mockUsers[i].email, password = mockUsers[i].password };
         var json = JsonConvert.SerializeObject(resource);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-
+        // ACT
         var postResponse = await _client.PostAsync(_url + myUrls[0], content);
         postResponse.EnsureSuccessStatusCode();
-
         var postResponseBody = await postResponse.Content.ReadAsStringAsync();
-        Console.WriteLine($"POST Response: {postResponseBody}");
-
+        // Get response context
         dynamic response = JsonConvert.DeserializeObject(postResponseBody);
-        Console.WriteLine($"POST Username: {response!.username}");
         Assert.AreEqual(mockUsers[i].email, response!.username.ToString());
     
     }
@@ -121,7 +120,7 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
         var response = await _client.GetAsync(_url + myUrls[2]);
 
         // ASSERT
-        Assert.AreEqual(response.StatusCode, HttpStatusCode.Unauthorized);
+        Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
 
@@ -154,7 +153,7 @@ public class IdempotencyTest // YOU MAY CHANGE THE CLASS NAME
         var response = await _client!.GetAsync(_url + myUrls[2]);
 
         // ASSERT
-        Assert.AreEqual(response.StatusCode, HttpStatusCode.Unauthorized);
+        Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     // Tests the scenario where the idempotency key is missing
