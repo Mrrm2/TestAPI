@@ -1,3 +1,8 @@
+Setting Up DLL On Translink Laptop
+```sh
+dotnet add package System.IdentityModel.Tokens.Jwt
+dotnet add package Microsoft.AspNetCore.Mvc.NewtonsoftJson
+```
 # TUTORIAL: SET UP MICROSOFT TEST FRAMEWORK ENVIRONMENT
 
 ## Note: If you get an error, you might have to delete the Data/Migrations Folder and Sample.db
