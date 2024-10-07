@@ -1,26 +1,18 @@
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace TestAPI.Attributes;
 
-
-
 /// <summary>
 /// Custom Attribute that checks if the user is valid and access key is also valid
-/// ADD THIS TO CONTROLLERS [CheckValid(<role>)]
+/// ADD THIS TO CONTROLLERS [CheckValid(role)]
 /// </summary>
-public class CheckValid : Attribute, IAuthorizationFilter
+public class CheckValid(
+    /* Role to check, [CheckValid(<role>)] */
+    string role
+    ) : Attribute, IAuthorizationFilter
 {
-    // Role to check
-    private readonly string _role;
-
-    // [CheckValid(<role>)]
-    public CheckValid(string role)
-    {
-        _role = role;
-    }
 
     // On Authorization, call this
     public void OnAuthorization(AuthorizationFilterContext context)
@@ -29,10 +21,10 @@ public class CheckValid : Attribute, IAuthorizationFilter
         var user = context.HttpContext.User;
 
         // if user is authenticated
-        bool isUserAuthenticated = user.Identity.IsAuthenticated;
+        bool isUserAuthenticated = user.Identity!.IsAuthenticated;
 
         // if user does not have the role specified on the _role variable
-        bool isRole = user.IsInRole(_role);
+        bool isRole = user.IsInRole(role);
 
         // if access token is not added to header
         bool containsAuthToken = context.HttpContext.Request.Headers.TryGetValue("Authorization", out var accessToken);
@@ -54,11 +46,7 @@ public class CheckValid : Attribute, IAuthorizationFilter
         // Checks if token is expired
         bool isExpired = DateTime.UtcNow.CompareTo(expDate) >= 0;
 
-        if (!isUserAuthenticated || !isRole || !containsAuthToken || isExpired)
-        {
-            context.Result = new UnauthorizedResult();
-            return;
-        }
-
+        if (isUserAuthenticated && isRole && containsAuthToken && !isExpired) return;
+        context.Result = new UnauthorizedResult();
     }
 }

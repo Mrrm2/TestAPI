@@ -5,21 +5,21 @@ using Microsoft.Extensions.Caching.Memory;
 namespace TestAPI.Attributes;
 
 /// <summary>
-/// if the current user with a idempontency key has not been processed, process and next function
+/// if the current user with a idempotency key has not been processed, process and next function
 /// different users can use the same idempotency key
 /// ADD THIS TO CONTROLLERS [InterceptOutbound]
 /// REMEMBER TO SET CACHE ON PROGRAM.CS
 /// </summary>
-public class InterceptOutbound(int expiryTime) : ActionFilterAttribute
+public class InterceptOutbound(
+    /* Expiry time for the cache to remove key, in days */
+    int cacheExpiryTime
+    ) : Attribute, IAsyncActionFilter
 {
     // Cache to store the processed keys via client id
     private static IMemoryCache? _cache;
 
     // Idempotency key header name
     private const string IdempotencyKeyHeader = "Idempotency-Key";
-
-    // Expiry time for the cache to remove key, in days
-    private int _expiryTime = expiryTime;
 
     // Set the Cache
     public static void SetCache(IMemoryCache cache)
@@ -28,10 +28,11 @@ public class InterceptOutbound(int expiryTime) : ActionFilterAttribute
     }
 
     // Called async before the action is executed
-    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
+        Console.WriteLine("Intercepting Outbound Request");
         // get client id from the user claims
-        string? client_id = context.HttpContext.User.FindFirst("client_id")?.Value;
+        string? clientId = context.HttpContext.User.FindFirst("client_id")?.Value;
         
         // Check for idempotency key in the request headers
         if (!context.HttpContext.Request.Headers.TryGetValue(IdempotencyKeyHeader, out var idempotencyKey))
@@ -41,9 +42,9 @@ public class InterceptOutbound(int expiryTime) : ActionFilterAttribute
             return;
         }
 
-        string true_idempotencyKey = $"{client_id}-{idempotencyKey}";
-        // Get the client cache procssed keys
-        if (_cache!.TryGetValue(true_idempotencyKey, out _))
+        string clientIdempotencyKey = $"{clientId}-{idempotencyKey}";
+        // Get the client cache processed key
+        if (_cache!.TryGetValue(clientIdempotencyKey, out _))
         {
             // if the key is in the cache
             // Return a 409 Conflict response if the idempotency key has already been processed
@@ -58,26 +59,31 @@ public class InterceptOutbound(int expiryTime) : ActionFilterAttribute
         // the executed context is the result of the action
         // so if the network failure, we can check here
         if (executedContext.Result is ObjectResult result)
-        switch (result.StatusCode)
-        {
-            case 200 or 201:
-                {
-                    // Mark the key as processed in the cache
-                    // Set the key in the cache to processed
-                    // The key will be removed from the cache after the expiry time
-                    // The default time span would be 10-5 days as Winston said
-                    _cache.Set(true_idempotencyKey!, true, TimeSpan.FromDays(_expiryTime));
-                }
-                break;
-            // Insert next status code here
-            // case <code>: {}
-            default:
-                Console.WriteLine("Request has failed.");
-                break;
-        }
-
-
- 
+            switch (result.StatusCode)
+            {
+                // All successful cases
+                case >= 200 and < 227:
+                    {
+                        // Mark the key as processed in the cache
+                        // Set the key in the cache to processed
+                        // The key will be removed from the cache after the expiry time
+                        // The default time span would be 10-5 days as Winston said
+                        _cache.Set(clientIdempotencyKey, true, TimeSpan.FromDays(cacheExpiryTime));
+                        executedContext.Result = new OkResult();
+                    }
+                    break;
+                case 503:
+                    {
+                        Console.WriteLine("Service not available");
+                    }
+                    break;
+                // Insert next status code here
+                // case <code>: {}
+                
+                default:
+                    Console.WriteLine("Request has failed.");
+                    break;
+            }
     }
 
 }
