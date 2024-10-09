@@ -40,12 +40,11 @@ public class IdempotencyFilter : IAsyncActionFilter
                 return;
             }
 
-            // Validate client ID from token (or hardcoded for dev)
-            var user = context.HttpContext.User;
-            string clientId = user.FindFirst("client_id")?.Value ?? "test-client-id";
+            // Extract client ID directly from JWT token
+            var clientId = context.HttpContext.User.FindFirst("client_id")?.Value;
             if (string.IsNullOrEmpty(clientId))
             {
-                context.Result = new UnauthorizedObjectResult("Client ID not found in access token.");
+                context.Result = new UnauthorizedObjectResult("Client ID not found in the JWT token.");
                 return;
             }
 
@@ -64,6 +63,4 @@ public class IdempotencyFilter : IAsyncActionFilter
             await next();
         }
     }
-
 }
-

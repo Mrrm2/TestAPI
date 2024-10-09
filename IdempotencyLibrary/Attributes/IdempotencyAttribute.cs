@@ -12,9 +12,9 @@ public class IdempotencyAttribute : Attribute
 
     /// <summary>
     /// Specifies the cache expiry duration in hours for the idempotency key.
-    /// Defaults to 24 hours.
+    /// Defaults to 24 hours but can be set by the implementing developer.
     /// </summary>
-    public int CacheExpiryInHours { get; set; } = 24;
+    public int CacheExpiryInHours { get; set; }
 
     /// <summary>
     /// Indicates whether requests without a valid Idempotency-Key should be rejected.
@@ -24,14 +24,20 @@ public class IdempotencyAttribute : Attribute
 
     /// <summary>
     /// Specifies the default retry count for operations in case of failure.
-    /// Can be adjusted based on future needs.
     /// </summary>
     public int RetryCount { get; set; } = 3;
 
     /// <summary>
     /// Specifies if caching should be performed using in-memory cache only.
-    /// This can be expanded to support other mechanisms in the future.
     /// </summary>
     public bool UseInMemoryCache { get; set; } = true;
-}
 
+    /// <summary>
+    /// Constructor to allow the user to specify the cache expiry duration.
+    /// </summary>
+    /// <param name="cacheExpiryInHours">The expiry time for the idempotency cache in hours.</param>
+    public IdempotencyAttribute(int cacheExpiryInHours = 24)
+    {
+        CacheExpiryInHours = cacheExpiryInHours;
+    }
+}

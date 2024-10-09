@@ -22,9 +22,9 @@ namespace TestAPI.IdempotencyLibrary.Attributes
 
         /// <summary>
         /// Specifies the cache expiry duration in hours for the captured response.
-        /// Defaults to 24 hours.
+        /// Defaults to 24 hours but can be set by the implementing developer.
         /// </summary>
-        public int CacheExpiryInHours { get; set; } = 24;
+        public int CacheExpiryInHours { get; set; }
 
         /// <summary>
         /// Indicates if the captured response should include metadata (e.g., timestamp).
@@ -49,5 +49,14 @@ namespace TestAPI.IdempotencyLibrary.Attributes
         /// Defaults to true.
         /// </summary>
         public bool OnlyCacheSuccessfulResponses { get; set; } = true;
+
+        /// <summary>
+        /// Constructor to allow the user to specify the cache expiry duration.
+        /// </summary>
+        /// <param name="cacheExpiryInHours">The expiry time for the response cache in hours.</param>
+        public ResponseCaptureAttribute(int cacheExpiryInHours = 24)
+        {
+            CacheExpiryInHours = cacheExpiryInHours;
+        }
     }
 }

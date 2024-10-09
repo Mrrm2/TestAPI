@@ -37,7 +37,8 @@ namespace TestAPI.IdempotencyLibrary.Filters
                     if (request.Headers.TryGetValue("Idempotency-Key", out var idempotencyKey) &&
                         resultContext.HttpContext.User.Identity?.IsAuthenticated == true)
                     {
-                        string clientId = resultContext.HttpContext.User.FindFirst("client_id")?.Value ?? "test-client-id"; // For local testing
+                        // Extract client ID from the JWT token
+                        var clientId = resultContext.HttpContext.User.FindFirst("client_id")?.Value;
 
                         // Add metadata if specified
                         var responseData = objectResult.Value;
